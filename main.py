@@ -13,3 +13,24 @@ To go about this calculation, we need to:
 We will have to agree on an initial asset portfolio and initial liabilities. For this we will simply use the actual information of a given pension fund using their annual report
 
 '''
+
+
+import random
+import numpy as np
+
+sim_runs = 100
+observed_time = 1
+delta_t = 1/365
+
+# create asset class with attributes standard distribution of returns, mean return and the total invested capital in said asset
+class Asset:
+    def __init__(self, sigma, mu, invested_capital):
+        self.sigma = sigma
+        self.mu = mu
+        self.invested_capital = invested_capital
+
+    def calculate_next_price(self, invested_capital):
+        pass
+
+# define liabilities as an amount constant over time
+liabilities = 7E08
