@@ -18,14 +18,16 @@ We will have to agree on an initial asset portfolio and initial liabilities. For
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
-sim_runs = 20
+sim_runs = 100
 observed_time = 1
 delta_t = 1/365
+time_steps = round(observed_time/delta_t)
 
 # create asset class with attributes standard distribution of returns, mean return and the total invested capital in said asset
 class Asset:
-    def __init__(self, sigma, mu, invested_capital):
+    def __init__(self, mu, sigma, invested_capital):
         self.sigma = sigma
         self.mu = mu
         self.invested_capital = invested_capital
@@ -54,15 +56,38 @@ class Asset:
 # define liabilities as an amount constant over time
 liabilities = 7E08
 
+mean_portfolio = [0.0 for _ in range(time_steps)]
+
 for a in range(sim_runs):
     
-    stock_price = []
-    stocks = Asset(0.9, 0.1, 1E06)
+    # define assets
+    stocks = Asset(0.07, 0.2, 1E07)
+    bonds = Asset(0.03, 0.03, 3E06)
+    real_estate = Asset(0.04, 0.014, 8E06)
+    portfolio = [stocks, bonds, real_estate]
     
-    for i in range(100):
-        stock_price.append(stocks.calculate_next_price(i, stocks.invested_capital))
+    portfolio_values = []
     
-    time = [t for t in range(100)]
-    plt.plot(time, stock_price)
+    for i in range(time_steps):
+        portfolio_value = 0
+        for asset in portfolio:
+            new_asset_value = asset.calculate_next_price(i, asset.invested_capital)
+            portfolio_value += new_asset_value
+        
+        mean_portfolio[i] += portfolio_value
+        portfolio_values.append(portfolio_value)
+        
+    time = [t for t in range(time_steps)]
+    plt.plot(time, portfolio_values, alpha=0.2)
     
+time = [t for t in range(time_steps)]
+for mp_i, s in enumerate(mean_portfolio):
+    mean_portfolio[mp_i] = s / sim_runs
+    
+log_returns_mean_portfolio = [float(np.log(c + 1)) for c in pd.Series(mean_portfolio).pct_change()]
+# overwrite nan
+log_returns_mean_portfolio[0] = 0
+
+plt.plot(time, mean_portfolio, color="black")
+
 plt.show()
