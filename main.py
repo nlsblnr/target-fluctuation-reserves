@@ -14,8 +14,6 @@ We will have to agree on an initial asset portfolio and initial liabilities. For
 
 '''
 
-
-import random
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -27,30 +25,30 @@ time_steps = round(observed_time/delta_t)
 
 # create asset class with attributes standard distribution of returns, mean return and the total invested capital in said asset
 class Asset:
-    def __init__(self, mu, sigma, invested_capital):
+    def __init__(self, mu, sigma, value):
         self.sigma = sigma
         self.mu = mu
-        self.invested_capital = invested_capital
-        self.initial_capital = invested_capital
+        self.value = value
+        self.initial_value = value
         self.brownian_motion_process = []
 
-    def calculate_next_price(self, run_index, invested_capital):
+    def calculate_next_price(self, run_index, value):
         
         time_now = run_index * delta_t
         
         if run_index == 0:
             self.brownian_motion_process.append(0)
-            new_invested_capital = self.initial_capital
+            new_value = self.initial_value
         else:
             dW = np.random.normal(loc=0, scale=np.sqrt(delta_t))
             self.brownian_motion_process.append(self.brownian_motion_process[-1] + dW)
             
             drift = self.mu - self.sigma**2/2
             
-            new_invested_capital = self.initial_capital*np.exp(drift*time_now + self.sigma*self.brownian_motion_process[run_index])
+            new_value = self.initial_value*np.exp(drift*time_now + self.sigma*self.brownian_motion_process[run_index])
             
-        self.invested_capital = float(new_invested_capital)
-        return self.invested_capital
+        self.value = float(new_value)
+        return self.value
 
 
 # define liabilities as an amount constant over time
@@ -71,7 +69,7 @@ for a in range(sim_runs):
     for i in range(time_steps):
         portfolio_value = 0
         for asset in portfolio:
-            new_asset_value = asset.calculate_next_price(i, asset.invested_capital)
+            new_asset_value = asset.calculate_next_price(i, asset.value)
             portfolio_value += new_asset_value
         
         mean_portfolio[i] += portfolio_value
