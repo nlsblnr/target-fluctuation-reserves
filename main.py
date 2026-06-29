@@ -18,8 +18,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-sim_runs = 100
-observed_time = 1
+sim_runs = 3000
+observed_time = 0.5
 delta_t = 1/365
 time_steps = round(observed_time/delta_t)
 
@@ -56,15 +56,19 @@ liabilities = 7E08
 
 mean_portfolio = [0.0 for _ in range(time_steps)]
 
+end_prices = []
+portfolio_vals_total = []
+
 for a in range(sim_runs):
     
-    # define assets
+    # define assets - they NEED to be defined for every single path
+    # because their data is permanently updated after every calculation
     stocks = Asset(0.07, 0.2, 1E07)
     bonds = Asset(0.03, 0.03, 3E06)
     real_estate = Asset(0.04, 0.014, 8E06)
     portfolio = [stocks, bonds, real_estate]
     
-    portfolio_values = []
+    portfolio_vals_a = []
     
     for i in range(time_steps):
         portfolio_value = 0
@@ -73,19 +77,37 @@ for a in range(sim_runs):
             portfolio_value += new_asset_value
         
         mean_portfolio[i] += portfolio_value
-        portfolio_values.append(portfolio_value)
+        portfolio_vals_a.append(portfolio_value)
         
     time = [t for t in range(time_steps)]
-    plt.plot(time, portfolio_values, alpha=0.2)
+    portfolio_vals_total.append(portfolio_vals_a)                 
+    
+    end_prices.append(portfolio_vals_a[-1])
     
 time = [t for t in range(time_steps)]
+
+# finalize mean path
 for mp_i, s in enumerate(mean_portfolio):
     mean_portfolio[mp_i] = s / sim_runs
-    
-log_returns_mean_portfolio = [float(np.log(c + 1)) for c in pd.Series(mean_portfolio).pct_change()]
-# overwrite nan
-log_returns_mean_portfolio[0] = 0
 
-plt.plot(time, mean_portfolio, color="black")
+# set up the both diagrams 
+fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(12, 4))
 
+# left diagram (all simulated paths + mean path)
+for y in portfolio_vals_total:
+    ax_left.plot(time, y, color="black", alpha=0.1)
+ax_left.plot(time, mean_portfolio, color="black", alpha=1)
+ax_left.set_title("All simulated paths")
+ax_left.set_xlabel("time")
+ax_left.set_ylabel("price")
+
+# right diagram (histogram of end prices)
+end_prices = [np.log(s/mean_portfolio[0]) for s in end_prices]
+ax_right.hist(end_prices, bins=50, edgecolor="black")
+ax_right.set_title("Distribution of log(total return)")
+ax_right.set_xlabel("log(total return)")
+ax_right.set_ylabel("frequency")
+
+plt.tight_layout()
 plt.show()
+
