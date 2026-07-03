@@ -1,5 +1,7 @@
 '''
-Implement periodic rebalancing of the portfolio including investing new funds according to the investment strategy.
+Implement periodic portfolio rebalancing
 
-This is important in order to improve a realistic portfolio behaviour.
+Implement periodic investment of new/additional funds into the portfolio
+
+This is important in order to achieve a more realistic portfolio behaviour
 '''
