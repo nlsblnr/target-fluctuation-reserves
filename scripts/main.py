@@ -52,6 +52,9 @@ class Asset:
             
         self.value = float(new_value)
         return self.value
+    
+    def rebalance_portfolio(self):
+        pass
 
 
 # define liabilities as an amount constant over time
