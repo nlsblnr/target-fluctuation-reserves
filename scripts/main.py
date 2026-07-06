@@ -17,11 +17,14 @@ We will have to agree on an initial asset portfolio and initial liabilities. For
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from rebalancing import rebalance_portfolio
 
 sim_runs = 1000
 observed_time = 5
 delta_t = 1/200
 time_steps = round(observed_time/delta_t)
+rebalancing_activated = True
+rebalancing_period = 0.25 # rebalance portfolio after every x years
 
 # asset multiplier (proportional factor) multiplied with portfolio values to experiment with its effect on the share of cases in which liablitites > assets
 asset_multiplier = 1.0
@@ -52,10 +55,6 @@ class Asset:
             
         self.value = float(new_value)
         return self.value
-    
-    def rebalance_portfolio(self):
-        pass
-
 
 # define liabilities as an amount constant over time
 liabilities = 1.75E08
@@ -72,6 +71,8 @@ for a in range(sim_runs):
     real_estate = Asset(0.04, 0.014, 5E07*asset_multiplier)
     miscellaneous = Asset(0.03, 0.05, 5E07*asset_multiplier)
     portfolio = [stocks, bonds, real_estate, miscellaneous]
+
+    target_allocation = [7/20, 3/20, 5/20, 5/20] # tells rebalancing function how to rebalance the portfolio
     
     portfolio_vals_a = []
     
@@ -82,6 +83,13 @@ for a in range(sim_runs):
             portfolio_value += new_asset_value
         
         portfolio_vals_a.append(portfolio_value)
+        
+        # rebalance portfolio if end of rebalancing period is reached AND rebalancing is activated
+        if rebalancing_activated:
+            if i % round(rebalancing_period/delta_t):
+                target_portfolio_values = rebalance_portfolio(portfolio, target_allocation)
+                for k, asset in enumerate(portfolio):
+                    asset.value = target_portfolio_values[k]
         
     time = [t for t in range(time_steps)]
     portfolio_vals_total.append(portfolio_vals_a)                 
