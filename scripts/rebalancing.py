@@ -22,7 +22,6 @@ def corridor_rebalancing(portfolio_now, target_allocation, min_weights, max_weig
         # if corridor boundary is crossed => rebalance the entire portfolio to the target weights
         if asset.value/portfolio_value_now < min_weight or asset.value/portfolio_value_now > max_weight:
             target_portfolio = [portfolio_value_now * target_weight for target_weight in target_allocation]
-            print(f"Rebalanced {[float(r.value) for r in portfolio_now]} => {target_portfolio}")
             return target_portfolio
             
     # if no corridor boundaries are crossed => return the current portfolio

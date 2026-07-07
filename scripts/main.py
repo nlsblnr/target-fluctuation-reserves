@@ -25,26 +25,20 @@ class Asset:
     def __init__(self, mu, sigma, value):
         self.sigma = sigma
         self.mu = mu
-        self.value = value
-        self.initial_value = value
-        self.brownian_motion_process = []
+        self.value = float(value)
+        self.brownian_motion_process = [0.0]
 
-    def calculate_next_price(self, run_index, value):
-        
-        time_now = run_index * delta_t
-        
+    def calculate_next_price(self, run_index):
         if run_index == 0:
-            self.brownian_motion_process.append(0)
-            new_value = self.initial_value
-        else:
-            dW = np.random.normal(loc=0, scale=np.sqrt(delta_t))
-            self.brownian_motion_process.append(self.brownian_motion_process[-1] + dW)
-            
-            drift = self.mu - self.sigma**2/2
-            
-            new_value = self.initial_value*np.exp(drift*time_now + self.sigma*self.brownian_motion_process[run_index])
-            
-        self.value = float(new_value)
+            return float(self.value)
+
+        dW = np.random.normal(loc=0.0, scale=np.sqrt(delta_t))
+        self.brownian_motion_process.append(self.brownian_motion_process[-1] + dW)
+
+        drift = (self.mu - 0.5 * self.sigma**2) * delta_t
+        diffusion = self.sigma * dW
+
+        self.value *= np.exp(drift + diffusion)
         return self.value
 
 # define liabilities as an amount constant over time
@@ -72,7 +66,7 @@ for a in range(sim_runs):
     for i in range(time_steps):
         portfolio_value = 0
         for asset in portfolio:
-            new_asset_value = asset.calculate_next_price(i, asset.value)
+            new_asset_value = asset.calculate_next_price(i)
             portfolio_value += new_asset_value
         
         portfolio_vals_a.append(portfolio_value)
