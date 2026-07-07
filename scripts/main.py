@@ -1,30 +1,21 @@
 '''
-
 The target fluctuation reserves are typically calculated as 2/3*(assets/liabilities - 1) such that this value is only negative in the worst 2.2 % of possible outcomes after five years of observation (less than two standard deviations below zero).
-
 This is a common rule of thumb to ensure that there are sufficient reserves to cover potential fluctuations in asset values relative to liabilities
-
-To go about this calculation, we need to:
-1. simulate possible outcomes for the given assets given their expected values and standard deviations
-2. simulate possible outcomes for the given liabilites statistical info
-3. calculate the fluctuation reserves (= assets/liabilities - 1) for each simulated outcome
-4. determine the 2.2 percentile of the fluctuation reserves to find the target fluctuation reserve
-
-We will have to agree on an initial asset portfolio and initial liabilities. For this we will simply use the actual information of a given pension fund using their annual report
-
 '''
 
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from rebalancing import rebalance_portfolio
+import rebalancing as rb
 
-sim_runs = 1000
+sim_runs = 1_000
 observed_time = 5
 delta_t = 1/200
 time_steps = round(observed_time/delta_t)
+
 rebalancing_activated = True
-rebalancing_period = 0.25 # rebalance portfolio after every x years
+rebalancing_period = 0.25 # rebalance portfolio after every x years, needed for calendar rebalancing
+rebalancing_style = "corridor"
 
 # asset multiplier (proportional factor) multiplied with portfolio values to experiment with its effect on the share of cases in which liablitites > assets
 asset_multiplier = 1.0
@@ -73,6 +64,8 @@ for a in range(sim_runs):
     portfolio = [stocks, bonds, real_estate, miscellaneous]
 
     target_allocation = [7/20, 3/20, 5/20, 5/20] # tells rebalancing function how to rebalance the portfolio
+    min_weights = [0.95 * w_t for w_t in target_allocation] # min weights are 5 % below target weights
+    max_weights = [1.05 * w_t for w_t in target_allocation] # max weights are 5 % above target weights
     
     portfolio_vals_a = []
     
@@ -84,13 +77,22 @@ for a in range(sim_runs):
         
         portfolio_vals_a.append(portfolio_value)
         
-        # rebalance portfolio if end of rebalancing period is reached AND rebalancing is activated
+        # start rebalancing procedure if rebalancing is activated
         if rebalancing_activated:
-            if i % round(rebalancing_period/delta_t):
-                target_portfolio_values = rebalance_portfolio(portfolio, target_allocation)
+
+            if rebalancing_style == "calendar":
+                # for calendar rebalancing: only call function if end of rebalancing period is reached
+                if i % round(rebalancing_period/delta_t):
+                    target_portfolio_values = rb.calendar_rebalancing(portfolio, target_allocation)
+                    for k, asset in enumerate(portfolio):
+                        asset.value = target_portfolio_values[k]
+            
+            elif rebalancing_style == "corridor":
+                # for corridor rebalancing: always call function
+                target_portfolio_values = rb.corridor_rebalancing(portfolio, target_allocation, min_weights, max_weights)
                 for k, asset in enumerate(portfolio):
                     asset.value = target_portfolio_values[k]
-        
+            
     time = [t for t in range(time_steps)]
     portfolio_vals_total.append(portfolio_vals_a)                 
     
@@ -120,9 +122,10 @@ for e in end_prices:
     if e < liabilities:
         amt_low_coverage += 1
 pct_low_coverage = amt_low_coverage / len(end_prices)
-print(f"Share of cases in which assets do not cover liabilites after {observed_time} years: {pct_low_coverage}")
+print(f"Share of cases in which assets do not cover liabilites after {observed_time} year(s): {pct_low_coverage}")
 
-print(f"Average portfolio value after {observed_time} years: {np.mean(end_prices)}")
+print(f"Average portfolio value after {observed_time} year(s): {np.mean(end_prices)}")
+print(f"Standard deviation of portfolio values after {observed_time} year(s): {np.std(end_prices)}")
 
 plt.tight_layout()
 plt.show()
