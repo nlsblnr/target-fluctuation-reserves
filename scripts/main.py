@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import rebalancing as rb
 
-sim_runs = 1_000
+sim_runs = 1
 observed_time = 5
 delta_t = 1/200
 time_steps = round(observed_time/delta_t)
