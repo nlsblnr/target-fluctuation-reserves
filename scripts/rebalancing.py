@@ -13,8 +13,8 @@ def calendar_rebalancing(portfolio_now, target_allocation):
 # returns list of new values for each of the given assets (e.g. [2E07, 3E07, 9E06])
 # THIS FUNCTION IS CALLED EVERY TIME STEP, IT CHECKS ITSELF IF REBALANCING IS NEEDED
 def corridor_rebalancing(portfolio_now, target_allocation, min_weights, max_weights):
-    portfolio_value_now = sum([asset.value for asset in portfolio_now])    
-    
+    portfolio_value_now = sum([asset.value for asset in portfolio_now])
+            
     for i, asset in enumerate(portfolio_now):
         min_weight = min_weights[i]
         max_weight = max_weights[i]
@@ -25,4 +25,4 @@ def corridor_rebalancing(portfolio_now, target_allocation, min_weights, max_weig
             return target_portfolio
             
     # if no corridor boundaries are crossed => return the current portfolio
-    return portfolio_now
+    return [asset.value for asset in portfolio_now]

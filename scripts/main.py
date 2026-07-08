@@ -8,13 +8,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import rebalancing as rb
 
-sim_runs = 1
+sim_runs = 1_000
 observed_time = 5
 delta_t = 1/200
 time_steps = round(observed_time/delta_t)
 
 rebalancing_activated = True
-rebalancing_period = 0.25 # rebalance portfolio after every x years, needed for calendar rebalancing
+rebalancing_period = 0.25 # periodically rebalance portfolio after x years, needed for calendar rebalancing
 rebalancing_style = "corridor"
 
 # asset multiplier (proportional factor) multiplied with portfolio values to experiment with its effect on the share of cases in which liablitites > assets
@@ -25,17 +25,14 @@ class Asset:
     def __init__(self, mu, sigma, value):
         self.sigma = sigma
         self.mu = mu
-        self.value = float(value)
-        self.brownian_motion_process = [0.0]
+        self.value = value
 
     def calculate_next_price(self, run_index):
         if run_index == 0:
-            return float(self.value)
+            return self.value
 
         dW = np.random.normal(loc=0.0, scale=np.sqrt(delta_t))
-        self.brownian_motion_process.append(self.brownian_motion_process[-1] + dW)
-
-        drift = (self.mu - 0.5 * self.sigma**2) * delta_t
+        drift = (self.mu - self.sigma**2/2) * delta_t
         diffusion = self.sigma * dW
 
         self.value *= np.exp(drift + diffusion)
