@@ -5,27 +5,18 @@ This is a common rule of thumb to ensure that there are sufficient reserves to c
 
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
 import rebalancing as rb
 
-sim_runs = 1_000
-observed_time = 5
-delta_t = 1/200
-time_steps = round(observed_time/delta_t)
-
-rebalancing_activated = True
-rebalancing_period = 0.25 # periodically rebalance portfolio after x years, needed for calendar rebalancing
-rebalancing_style = "corridor"
-
-# asset multiplier (proportional factor) multiplied with portfolio values to experiment with its effect on the share of cases in which liablitites > assets
-asset_multiplier = 1.0
-
-# create asset class with attributes standard distribution of returns, mean return and the total invested capital in said asset
+# create asset class with attributes standard distribution of returns, mean return and the total amount invested
 class Asset:
     def __init__(self, mu, sigma, value):
         self.sigma = sigma
         self.mu = mu
         self.value = value
+        self.initial_value = value
+        
+    def reset_value(self):
+        self.value = self.initial_value
 
     def calculate_next_price(self, run_index):
         if run_index == 0:
@@ -38,6 +29,30 @@ class Asset:
         self.value *= np.exp(drift + diffusion)
         return self.value
 
+sim_runs = 1_000
+observed_time = 5
+delta_t = 1/200
+time_steps = round(observed_time/delta_t)
+
+rebalancing_activated = True
+rebalancing_period = 1/12 # periodically rebalance portfolio after x years, needed for calendar rebalancing
+rebalancing_style = "calendar"
+
+# asset multiplier (proportional factor) multiplied with portfolio values to experiment with its effect on the share of cases in which liablitites > assets
+asset_multiplier = 1.0
+
+# define initial assets and portfolio
+stocks = Asset(0.07, 0.2, 7E07*asset_multiplier)
+bonds = Asset(0.03, 0.03, 3E07*asset_multiplier)
+real_estate = Asset(0.04, 0.014, 5E07*asset_multiplier)
+miscellaneous = Asset(0.03, 0.05, 5E07*asset_multiplier)
+portfolio = [stocks, bonds, real_estate, miscellaneous]
+
+# define target allocation and corridor needed for rebalancing
+target_allocation = [7/20, 3/20, 5/20, 5/20] # tells rebalancing function how to rebalance the portfolio
+min_weights = [0.95 * w_t for w_t in target_allocation] # min weights are 5 % below target weights
+max_weights = [1.05 * w_t for w_t in target_allocation] # max weights are 5 % above target weights
+
 # define liabilities as an amount constant over time
 liabilities = 1.75E08
 
@@ -46,27 +61,20 @@ portfolio_vals_total = []
 
 for a in range(sim_runs):
     
-    # define assets - they NEED to be defined for every single path
-    # because their data is permanently updated after every calculation
-    stocks = Asset(0.07, 0.2, 7E07*asset_multiplier)
-    bonds = Asset(0.03, 0.03, 3E07*asset_multiplier)
-    real_estate = Asset(0.04, 0.014, 5E07*asset_multiplier)
-    miscellaneous = Asset(0.03, 0.05, 5E07*asset_multiplier)
-    portfolio = [stocks, bonds, real_estate, miscellaneous]
-
-    target_allocation = [7/20, 3/20, 5/20, 5/20] # tells rebalancing function how to rebalance the portfolio
-    min_weights = [0.95 * w_t for w_t in target_allocation] # min weights are 5 % below target weights
-    max_weights = [1.05 * w_t for w_t in target_allocation] # max weights are 5 % above target weights
+    # reset asset values to initial values at the start of each sim run
+    for asset in portfolio:
+        asset.reset_value()
+        
+    value_paths_a = []
     
-    portfolio_vals_a = []
-    
+    # simulate portfolio over time
     for i in range(time_steps):
         portfolio_value = 0
         for asset in portfolio:
             new_asset_value = asset.calculate_next_price(i)
             portfolio_value += new_asset_value
         
-        portfolio_vals_a.append(portfolio_value)
+        value_paths_a.append(portfolio_value)
         
         # start rebalancing procedure if rebalancing is activated
         if rebalancing_activated:
@@ -83,16 +91,17 @@ for a in range(sim_runs):
                 target_portfolio_values = rb.corridor_rebalancing(portfolio, target_allocation, min_weights, max_weights)
                 for k, asset in enumerate(portfolio):
                     asset.value = target_portfolio_values[k]
-            
-    time = [t for t in range(time_steps)]
-    portfolio_vals_total.append(portfolio_vals_a)                 
     
-    end_prices.append(portfolio_vals_a[-1])
+    # add path_a for figure displaying every simulated value path
+    portfolio_vals_total.append(value_paths_a)                 
     
-time = [t for t in range(time_steps)]
+    # add final price of path_a to the list of end prices for figure displaying distribution of end prices (histogram)
+    end_prices.append(value_paths_a[-1])
 
 # set up the both diagrams 
 fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(12, 4))
+
+time = [t for t in range(time_steps)]
 
 # left diagram (all simulated paths)
 for y in portfolio_vals_total:
