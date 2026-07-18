@@ -5,127 +5,78 @@ This is a common rule of thumb to ensure that there are sufficient reserves to c
 
 import numpy as np
 import matplotlib.pyplot as plt
-import rebalancing as rb
+import liabilities as lia
+import assets as ast
 
-# create asset class with attributes standard distribution of returns, mean return and the total amount invested
-class Asset:
-    def __init__(self, mu, sigma, value):
-        self.sigma = sigma
-        self.mu = mu
-        self.value = value
-        self.initial_value = value
-        
-    def reset_value(self):
-        self.value = self.initial_value
-
-    def calculate_next_price(self, run_index):
-        if run_index == 0:
-            return self.value
-
-        dW = np.random.normal(loc=0.0, scale=np.sqrt(delta_t))
-        drift = (self.mu - self.sigma**2/2) * delta_t
-        diffusion = self.sigma * dW
-
-        self.value *= np.exp(drift + diffusion)
-        return self.value
-
-sim_runs = 1_000
-observed_time = 5
-delta_t = 1/200
-time_steps = round(observed_time/delta_t)
-
-rebalancing_activated = True
-rebalancing_period = 1/12 # periodically rebalance portfolio after x years, needed for calendar rebalancing
-rebalancing_style = "calendar"
-
-# asset multiplier (proportional factor) multiplied with portfolio values to experiment with its effect on the share of cases in which liablitites > assets
-asset_multiplier = 1.0
+SIM_RUNS = 1_000
+DELTA_T = 1/200
+OBSERVED_TIME = 5
+TIME_STEPS = round(OBSERVED_TIME/DELTA_T)
 
 # define initial assets and portfolio
-stocks = Asset(0.07, 0.2, 7E07*asset_multiplier)
-bonds = Asset(0.03, 0.03, 3E07*asset_multiplier)
-real_estate = Asset(0.04, 0.014, 5E07*asset_multiplier)
-miscellaneous = Asset(0.03, 0.05, 5E07*asset_multiplier)
-portfolio = [stocks, bonds, real_estate, miscellaneous]
+stocks = ast.Asset(0.07, 0.2, 7E07, DELTA_T)
+bonds = ast.Asset(0.03, 0.03, 3E07, DELTA_T)
+real_estate = ast.Asset(0.04, 0.014, 5E07, DELTA_T)
+miscellaneous = ast.Asset(0.03, 0.05, 5E07, DELTA_T)
+pf = [stocks, bonds, real_estate, miscellaneous]
 
 # define target allocation and corridor needed for rebalancing
 target_allocation = [7/20, 3/20, 5/20, 5/20] # tells rebalancing function how to rebalance the portfolio
 min_weights = [0.95 * w_t for w_t in target_allocation] # min weights are 5 % below target weights
 max_weights = [1.05 * w_t for w_t in target_allocation] # max weights are 5 % above target weights
 
-# define liabilities as an amount constant over time
-liabilities = 1.75E08
-
-end_prices = []
+# two list that again include lists representing asset and liability paths
 portfolio_vals_total = []
+liability_vals_total = []
 
-for a in range(sim_runs):
+# simulate specified number of asset and liability paths
+for n in range(SIM_RUNS):
+    asset_path_n = ast.simulate_assets(delta_t=DELTA_T, observed_time=OBSERVED_TIME, portfolio=pf, rebalancing_activated=True, rebalancing_style="calendar", rebalancing_period=1/4, target_allocation=target_allocation, min_weights=min_weights, max_weights=max_weights)
+    portfolio_vals_total.append(asset_path_n)
     
-    # reset asset values to initial values at the start of each sim run
-    for asset in portfolio:
-        asset.reset_value()
-        
-    value_paths_a = []
+    liability_path_n = lia.simulate_liabilities(delta_t=DELTA_T, observed_time=OBSERVED_TIME, initial_liabilities=1.78E08)
+    liability_vals_total.append(liability_path_n)
     
-    # simulate portfolio over time
-    for i in range(time_steps):
-        portfolio_value = 0
-        for asset in portfolio:
-            new_asset_value = asset.calculate_next_price(i)
-            portfolio_value += new_asset_value
-        
-        value_paths_a.append(portfolio_value)
-        
-        # start rebalancing procedure if rebalancing is activated
-        if rebalancing_activated:
-
-            if rebalancing_style == "calendar":
-                # for calendar rebalancing: only call function if end of rebalancing period is reached
-                if i % round(rebalancing_period/delta_t):
-                    target_portfolio_values = rb.calendar_rebalancing(portfolio, target_allocation)
-                    for k, asset in enumerate(portfolio):
-                        asset.value = target_portfolio_values[k]
-            
-            elif rebalancing_style == "corridor":
-                # for corridor rebalancing: always call function
-                target_portfolio_values = rb.corridor_rebalancing(portfolio, target_allocation, min_weights, max_weights)
-                for k, asset in enumerate(portfolio):
-                    asset.value = target_portfolio_values[k]
-    
-    # add path_a for figure displaying every simulated value path
-    portfolio_vals_total.append(value_paths_a)                 
-    
-    # add final price of path_a to the list of end prices for figure displaying distribution of end prices (histogram)
-    end_prices.append(value_paths_a[-1])
+final_prices = [path_i[-1] for path_i in portfolio_vals_total]
+final_liabilites = [path_j[-1] for path_j in liability_vals_total]
 
 # set up the both diagrams 
 fig, (ax_left, ax_right) = plt.subplots(1, 2, figsize=(12, 4))
 
-time = [t for t in range(time_steps)]
+time = [t for t in range(TIME_STEPS)]
 
-# left diagram (all simulated paths)
-for y in portfolio_vals_total:
-    ax_left.plot(time, y, color="black", alpha=0.1)
-ax_left.set_title("All simulated paths")
+final_asset_liability_ratios = []
+
+# left diagram (all simulated paths of asset/liabilities)
+for asset_path, liability_path in zip(portfolio_vals_total, liability_vals_total):
+    
+    asset_liability_path = []
+    for a_val, l_val in zip(asset_path, liability_path):
+        asset_liability_path.append(a_val/l_val)
+        
+    final_asset_liability_ratios.append(asset_liability_path[-1])
+    
+    ax_left.plot(time, asset_liability_path, color="black", alpha=0.1)
+ax_left.set_title("Assets/Liabilities ratio for all simulated paths")
 ax_left.set_xlabel("time")
-ax_left.set_ylabel("price")
+ax_left.set_ylabel("asset/liabilities")
 
-# right diagram (histogram of end prices)
-ax_right.hist(end_prices, bins=50, edgecolor="black")
-ax_right.set_title("Distribution of end prices")
-ax_right.set_xlabel("end prices")
+# right diagram (histogram of final asset/liability ratios)
+ax_right.hist(final_asset_liability_ratios, bins=50, edgecolor="black")
+ax_right.set_title("Distribution of final asset/liability ratios")
+ax_right.set_xlabel("asset/liability ratio")
 ax_right.set_ylabel("frequency")
 
-# percentage of paths for which liabilities > assets
+# calculate percentage of paths for which liabilities > assets
 amt_low_coverage = 0
-for e in end_prices:
-    if e < liabilities:
+for final_price, final_liability in zip(final_prices, final_liabilites):
+    if final_price < final_liability:
         amt_low_coverage += 1
-pct_low_coverage = amt_low_coverage / len(end_prices)
-print(f"Share of cases in which assets do not cover liabilites after {observed_time} year(s): {pct_low_coverage}")
+pct_low_coverage = amt_low_coverage / len(final_prices)
+print(f"Share of cases in which assets do not cover liabilites after {OBSERVED_TIME} year(s): {pct_low_coverage}")
 
-print(f"Average portfolio value after {observed_time} year(s): {np.mean(end_prices)}")
-print(f"Standard deviation of portfolio values after {observed_time} year(s): {np.std(end_prices)}")
+print(f"Average portfolio value after {OBSERVED_TIME} year(s): {np.mean(final_prices)}")
+print(f"Standard deviation of portfolio values after {OBSERVED_TIME} year(s): {np.std(final_prices)}")
 
 plt.tight_layout()
 plt.show()
