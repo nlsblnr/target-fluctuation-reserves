@@ -1,5 +1,5 @@
 # target-fluctuation-reserves: Asset and Liability Management Applied to Pension Funds
-In this project, I use Monte Carlo simulations in order to find out whether a pension fund's assets can sufficiently cover the funds liabilities.
+In this project, I use Monte Carlo simulations in order to find out whether a pension fund's assets can sufficiently cover the fund's liabilities.
 
 ## Structure
 The project consists of the following files:
