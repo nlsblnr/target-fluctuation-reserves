@@ -3,13 +3,15 @@ In this project, I use Monte Carlo simulations in order to find out whether a pe
 
 ## Structure
 The project consists of the following files:
-### assets.py
+### requirements.txt
+Lists the required Python libraries
+### src/assets.py
 Includes the definition of the Asset class and the function used to simulate one single portfolio value path; is called in main.py
-### liabilities.py
+### src/liabilities.py
 Includes the function used to simulate one single liability time series; is called in main.py
-### rebalancing.py
+### src/rebalancing.py
 Includes all functions used to rebalance the asset portfolio; is called in assets.py
-### main.py
+### src/main.py
 This is where the simulation is put together: for a given number of sim runs, portfolio value paths and liability time series are simulated and combined to calculate the asset/liability ratio (in German: Deckungsgrad). Here you can also create figures/diagrams using matplotlib if wanted.
 
 ## How to run your own simulation
