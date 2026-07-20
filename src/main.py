@@ -19,6 +19,12 @@ bonds = ast.Asset(0.03, 0.03, 3E07, DELTA_T)
 real_estate = ast.Asset(0.04, 0.014, 5E07, DELTA_T)
 miscellaneous = ast.Asset(0.03, 0.05, 5E07, DELTA_T)
 pf = [stocks, bonds, real_estate, miscellaneous]
+corr_matrix = [
+    [1.0, 0.4, -0.2, 0.1],
+    [0.4, 1.0, 0.3, 0.7],
+    [-0.2, 0.3, 1.0, -0.1],
+    [0.1, 0.7, -0.1, 1.0]
+]
 
 # define target allocation and corridor needed for rebalancing
 target_allocation = [7/20, 3/20, 5/20, 5/20] # tells rebalancing function how to rebalance the portfolio
@@ -31,7 +37,7 @@ liability_vals_total = []
 
 # simulate specified number of asset and liability paths
 for n in range(SIM_RUNS):
-    asset_path_n = ast.simulate_assets(delta_t=DELTA_T, observed_time=OBSERVED_TIME, portfolio=pf, rebalancing_activated=True, rebalancing_style="calendar", rebalancing_period=1/4, target_allocation=target_allocation, min_weights=min_weights, max_weights=max_weights)
+    asset_path_n = ast.simulate_assets(delta_t=DELTA_T, observed_time=OBSERVED_TIME, portfolio=pf, correlation_matrix=corr_matrix, rebalancing_activated=True, rebalancing_style="calendar", rebalancing_period=1/4, target_allocation=target_allocation, min_weights=min_weights, max_weights=max_weights)
     portfolio_vals_total.append(asset_path_n)
     
     liability_path_n = lia.simulate_liabilities(delta_t=DELTA_T, observed_time=OBSERVED_TIME, initial_liabilities=1.78E08)
@@ -67,16 +73,22 @@ ax_right.set_title("Distribution of final asset/liability ratios")
 ax_right.set_xlabel("asset/liability ratio")
 ax_right.set_ylabel("frequency")
 
-# calculate percentage of paths for which liabilities > assets
-amt_low_coverage = 0
-for final_price, final_liability in zip(final_prices, final_liabilites):
-    if final_price < final_liability:
-        amt_low_coverage += 1
-pct_low_coverage = amt_low_coverage / len(final_prices)
-print(f"Share of cases in which assets do not cover liabilites after {OBSERVED_TIME} year(s): {pct_low_coverage}")
-
+# general stats about assets
 print(f"Average portfolio value after {OBSERVED_TIME} year(s): {np.mean(final_prices)}")
 print(f"Standard deviation of portfolio values after {OBSERVED_TIME} year(s): {np.std(final_prices)}")
+
+# general stats about asset/liability ratios
+print(f"\nAverage asset/liability ratio after {OBSERVED_TIME} year(s): {np.mean(final_asset_liability_ratios)*100} %")
+print(f"Standard deviation of asset/liability ratios after {OBSERVED_TIME} year(s): {np.std(final_asset_liability_ratios)*100} %")
+
+# calculate percentage of paths for which liabilities > assets
+amt_underfunding = 0
+for final_price, final_liability in zip(final_prices, final_liabilites):
+    if final_price < final_liability:
+        amt_underfunding += 1
+pct_underfunding = amt_underfunding / len(final_prices)
+print(f"\nShare of cases in which assets do not cover liabilites after {OBSERVED_TIME} year(s): {pct_underfunding}")
+
 
 plt.tight_layout()
 plt.show()
