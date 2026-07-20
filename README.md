@@ -24,8 +24,6 @@ The entire project can be executed locally with Python 3.14. Some standard libra
 
 The following things would be valuable extensions to the simulation:
 
-- Add correlated asset returns so the portfolio reflects how markets move together. This will make the simulation more realistic than treating each asset independently.
-
 - Include transaction costs and more detailed rebalancing rules. That will show how often rebalancing is truly beneficial after costs.
 
 - Make liabilities more realistic by linking them to interest rates, benefit payments, or contributions. This will improve the asset-liability view of the pension fund.
