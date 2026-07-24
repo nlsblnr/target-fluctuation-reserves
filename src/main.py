@@ -37,7 +37,7 @@ liability_vals_total = []
 
 # simulate specified number of asset and liability paths
 for n in range(SIM_RUNS):
-    asset_path_n = ast.simulate_assets(delta_t=DELTA_T, observed_time=OBSERVED_TIME, portfolio=pf, correlation_matrix=corr_matrix, rebalancing_activated=True, rebalancing_style="calendar", rebalancing_period=1/4, target_allocation=target_allocation, min_weights=min_weights, max_weights=max_weights)
+    asset_path_n = ast.simulate_assets(delta_t=DELTA_T, observed_time=OBSERVED_TIME, portfolio=pf, yearly_contributions=2E06, contributions_period=1/4, correlation_matrix=corr_matrix, rebalancing_activated=True, rebalancing_style="calendar", rebalancing_period=1/4, target_allocation=target_allocation, min_weights=min_weights, max_weights=max_weights)
     portfolio_vals_total.append(asset_path_n)
     
     liability_path_n = lia.simulate_liabilities(delta_t=DELTA_T, observed_time=OBSERVED_TIME, initial_liabilities=1.78E08)
@@ -74,7 +74,7 @@ ax_right.set_xlabel("asset/liability ratio")
 ax_right.set_ylabel("frequency")
 
 # general stats about assets
-print(f"Average portfolio value after {OBSERVED_TIME} year(s): {np.mean(final_prices)}")
+print(f"\nAverage portfolio value after {OBSERVED_TIME} year(s): {np.mean(final_prices)}")
 print(f"Standard deviation of portfolio values after {OBSERVED_TIME} year(s): {np.std(final_prices)}")
 
 # general stats about asset/liability ratios

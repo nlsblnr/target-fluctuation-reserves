@@ -23,8 +23,32 @@ class Asset:
         self.value *= np.exp(drift + diffusion)
         return self.value
 
+# returns the portfolio after investing contributions
+# assumes that no assets are sold, no transaction costs and buys underweight assets proportionally to difference between the target value and the actual value
+def updated_portfolio_after_contributions(portfolio=[], target_allocation=[], contributions=0.0):
+    actual_values = [asset.value for asset in portfolio]
+    target_values_after_investment = [(sum(actual_values) + contributions)*w_t for w_t in target_allocation]
+    
+    # if, after adding the contributions, an asset is underweight, add the value gap to the investment list (gaps)
+    gaps = []
+    for actual, target in zip(actual_values, target_values_after_investment):
+        gap = max(0, target - actual)
+        gaps.append(gap)
+    total_gap = sum(gaps)    
+    
+    if total_gap == 0:
+        # everything at or above target: allocate by target weights
+        value_deltas = [contributions * w for w in target_allocation]
+    else:
+        value_deltas = [contributions * gap / total_gap for gap in gaps]
+
+    for asset, delta in zip(portfolio, value_deltas):
+        asset.value += delta
+
+    return portfolio
+    
 # simulates exactly one asset value path
-def simulate_assets(observed_time=5, delta_t=1/200, portfolio=[], correlation_matrix=[], rebalancing_activated=True, rebalancing_period=1/4, rebalancing_style="calendar", target_allocation=[], min_weights=[], max_weights=[]):
+def simulate_assets(observed_time=5, delta_t=1/200, portfolio=[], correlation_matrix=[], yearly_contributions=0.0, contributions_period=1/4, rebalancing_activated=True, rebalancing_period=1/4, rebalancing_style="calendar", target_allocation=[], min_weights=[], max_weights=[]):
     
     time_steps = round(observed_time/delta_t)
     
@@ -64,12 +88,17 @@ def simulate_assets(observed_time=5, delta_t=1/200, portfolio=[], correlation_ma
         
         value_path.append(float(portfolio_value))
         
+        if yearly_contributions > 0.0:
+            # invest contributions if end of contributions period is reached
+            if i % round(contributions_period/delta_t) == 0 and i != 0:
+                portfolio = updated_portfolio_after_contributions(portfolio, target_allocation, yearly_contributions*contributions_period)
+        
         # start rebalancing procedure if rebalancing is activated
         if rebalancing_activated:
 
             if rebalancing_style == "calendar":
                 # for calendar rebalancing: only call function if end of rebalancing period is reached
-                if i % round(rebalancing_period/delta_t):
+                if i % round(rebalancing_period/delta_t) == 0 and i != 0:
                     target_portfolio_values = rb.calendar_rebalancing(portfolio, target_allocation)
                     for k, asset in enumerate(portfolio):
                         asset.value = target_portfolio_values[k]
@@ -80,5 +109,5 @@ def simulate_assets(observed_time=5, delta_t=1/200, portfolio=[], correlation_ma
                 for k, asset in enumerate(portfolio):
                     asset.value = target_portfolio_values[k]
     
-    # return price path
+    # return portfolio value path
     return value_path

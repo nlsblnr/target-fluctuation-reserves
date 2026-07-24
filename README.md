@@ -12,7 +12,7 @@ Includes the function used to simulate one single liability time series; is call
 ### src/rebalancing.py
 Includes all functions used to rebalance the asset portfolio; is called in assets.py
 ### src/main.py
-This is where the simulation is put together: for a given number of sim runs, portfolio value paths and liability time series are simulated and combined to calculate the asset/liability ratio (in German: Deckungsgrad). Here you can also create figures/diagrams using matplotlib if wanted.
+This is where the simulation is put together: For a given number of sim runs, portfolio value paths and liability time series are simulated and combined to calculate the asset/liability ratio (in German: Deckungsgrad). Here you can also create figures/diagrams using matplotlib if wanted.
 
 ## How to run your own simulation
 The entire project can be executed locally with Python 3.14. Some standard libraries are used, such as NumPy and Matplotlib.
