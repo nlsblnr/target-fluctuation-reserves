@@ -24,11 +24,14 @@ The entire project can be executed locally with Python 3.14. Some standard libra
 
 The following things would be valuable extensions to the simulation:
 
-- Include transaction costs and more detailed rebalancing rules. That will show how often rebalancing is truly beneficial after costs.
+- Include transaction costs and more detailed rebalancing rules.
+	- Transaction costs have been added to rebalancing only. They still need to be considered in the remaining transaction processes.
+	- Add the possibility to engage multiple rebalancing principles at the same time.
 
 - Make liabilities more realistic by linking them to interest rates, benefit payments, or contributions. This will improve the asset-liability view of the pension fund.
 
 - Add cash flows such as contributions and benefit payments. Pension funds are not static, so these flows make the simulation much closer to reality.
+	- Simple, time-constant contributions have been added.
 
 - Test different market scenarios like crashes, rising rates, or inflation shocks. This helps evaluate how robust the portfolio is under stress.
 
