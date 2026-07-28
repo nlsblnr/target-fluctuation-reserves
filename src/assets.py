@@ -25,7 +25,10 @@ class Asset:
 
 # returns the portfolio after investing contributions
 # assumes that no assets are sold, no transaction costs and buys underweight assets proportionally to difference between the target value and the actual value
-def updated_portfolio_after_contributions(portfolio=[], target_allocation=[], contributions=0.0):
+def updated_portfolio_after_contributions(portfolio=[], target_allocation=[], contributions=0.0, transaction_costs=0.0):
+    # deduct transaction costs from contributions
+    contributions = (1 - transaction_costs)*contributions
+    
     actual_values = [asset.value for asset in portfolio]
     target_values_after_investment = [(sum(actual_values) + contributions)*w_t for w_t in target_allocation]
     
@@ -91,7 +94,7 @@ def simulate_assets(observed_time=5, delta_t=1/200, portfolio=[], correlation_ma
         if yearly_contributions > 0.0:
             # invest contributions if end of contributions period is reached
             if i % round(contributions_period/delta_t) == 0 and i != 0:
-                portfolio = updated_portfolio_after_contributions(portfolio, target_allocation, yearly_contributions*contributions_period)
+                portfolio = updated_portfolio_after_contributions(portfolio, target_allocation, yearly_contributions*contributions_period, transaction_costs)
         
         # start rebalancing procedure if rebalancing is activated
         if rebalancing_activated:
