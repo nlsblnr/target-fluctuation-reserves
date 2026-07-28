@@ -25,8 +25,8 @@ The entire project can be executed locally with Python 3.14. Some standard libra
 The following things would be valuable extensions to the simulation:
 
 - Include transaction costs and more detailed rebalancing rules.
-	- Transaction costs have been added to rebalancing only. They still need to be considered in the remaining transaction processes.
-	- Add the possibility to engage multiple rebalancing principles at the same time.
+	- Transaction costs have been added to all transactions.
+	- It is now possible to engage multiple rebalancing styles at the same time.
 
 - Make liabilities more realistic by linking them to interest rates, benefit payments, or contributions. This will improve the asset-liability view of the pension fund.
 

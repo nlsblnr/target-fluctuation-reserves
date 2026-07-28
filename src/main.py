@@ -24,8 +24,8 @@ corr_matrix = [
 
 # define target allocation and corridor needed for rebalancing
 target_allocation = [7/20, 3/20, 5/20, 5/20] # tells rebalancing function how to rebalance the portfolio
-min_weights = [0.95 * w_t for w_t in target_allocation] # min weights are 5 % below target weights
-max_weights = [1.05 * w_t for w_t in target_allocation] # max weights are 5 % above target weights
+min_weights = [w_t - 0.05 for w_t in target_allocation] # min weights are 5 % below target weights
+max_weights = [w_t + 0.05 for w_t in target_allocation] # max weights are 5 % above target weights
 
 # two list that again include lists representing asset and liability paths
 portfolio_vals_total = []
@@ -33,7 +33,11 @@ liability_vals_total = []
 
 # simulate specified number of asset and liability paths
 for n in range(SIM_RUNS):
-    asset_path_n = ast.simulate_assets(delta_t=DELTA_T, observed_time=OBSERVED_TIME, portfolio=pf, yearly_contributions=2E06, contributions_period=1, correlation_matrix=corr_matrix, transaction_costs=TRANSACTION_COSTS, rebalancing_activated=True, rebalancing_style="calendar", rebalancing_period=1/4, target_allocation=target_allocation, min_weights=min_weights, max_weights=max_weights)
+    # print milestones for improved runtime supervision
+    if (n+1) % 100 == 0:
+        print(f"Completed {n+1}/{SIM_RUNS} sim runs ----- {round((n+1)/SIM_RUNS*100)} % done")
+    
+    asset_path_n = ast.simulate_assets(delta_t=DELTA_T, observed_time=OBSERVED_TIME, portfolio=pf, yearly_contributions=2E06, contributions_period=1, correlation_matrix=corr_matrix, transaction_costs=TRANSACTION_COSTS, rebalancing_activated=True, rebalancing_style=["calendar", "corridor"], rebalancing_period=1/4, target_allocation=target_allocation, min_weights=min_weights, max_weights=max_weights)
     portfolio_vals_total.append(asset_path_n)
     
     liability_path_n = lia.simulate_liabilities(delta_t=DELTA_T, observed_time=OBSERVED_TIME, initial_liabilities=1.78E08)

@@ -51,7 +51,7 @@ def updated_portfolio_after_contributions(portfolio=[], target_allocation=[], co
     return portfolio
     
 # simulates exactly one asset value path
-def simulate_assets(observed_time=5, delta_t=1/200, portfolio=[], correlation_matrix=[], yearly_contributions=0.0, contributions_period=1/4, transaction_costs=0.0, rebalancing_activated=True, rebalancing_period=1/4, rebalancing_style="calendar", target_allocation=[], min_weights=[], max_weights=[]):
+def simulate_assets(observed_time=5, delta_t=1/200, portfolio=[], correlation_matrix=[], yearly_contributions=0.0, contributions_period=1/4, transaction_costs=0.0, rebalancing_activated=True, rebalancing_period=1/4, rebalancing_style=["calendar", "corridor"], target_allocation=[], min_weights=[], max_weights=[]):
     
     time_steps = round(observed_time/delta_t)
     
@@ -99,14 +99,14 @@ def simulate_assets(observed_time=5, delta_t=1/200, portfolio=[], correlation_ma
         # start rebalancing procedure if rebalancing is activated
         if rebalancing_activated:
 
-            if rebalancing_style == "calendar":
+            if "calendar" in rebalancing_style:
                 # for calendar rebalancing: only call function if end of rebalancing period is reached
                 if i % round(rebalancing_period/delta_t) == 0 and i != 0:
                     target_portfolio_values = rb.calendar_rebalancing(portfolio, target_allocation, transaction_costs)
                     for k, asset in enumerate(portfolio):
                         asset.value = target_portfolio_values[k]
             
-            elif rebalancing_style == "corridor":
+            if "corridor" in rebalancing_style:
                 # for corridor rebalancing: always call function
                 target_portfolio_values = rb.corridor_rebalancing(portfolio, target_allocation, min_weights, max_weights, transaction_costs)
                 for k, asset in enumerate(portfolio):
