@@ -2,7 +2,17 @@
 In this project, I use Monte Carlo simulations in order to find out whether a pension fund's assets can sufficiently cover the fund's liabilities.
 
 ## Structure
-The project consists of the following files:
+The project is structured as follows:
+<pre>
+├── README.md
+├── requirements.txt
+└── src/
+    ├── assets.py
+    ├── liabilities.py
+    ├── main.py
+    └── rebalancing.py
+</pre>
+
 ### requirements.txt
 Lists the required Python libraries
 ### src/assets.py
