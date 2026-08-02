@@ -10,20 +10,20 @@ TIME_STEPS = round(OBSERVED_TIME/DELTA_T)
 TRANSACTION_COSTS = 0.001 # percentage of trading volume
 
 # define initial assets and portfolio
-stocks = ast.Asset(0.07, 0.2, 7E07, DELTA_T)
-bonds = ast.Asset(0.03, 0.03, 3E07, DELTA_T)
-real_estate = ast.Asset(0.04, 0.014, 5E07, DELTA_T)
-miscellaneous = ast.Asset(0.03, 0.05, 5E07, DELTA_T)
+stocks = ast.Asset(0.06, 0.15, 1E08, DELTA_T)
+bonds = ast.Asset(0.03, 0.05, 3E07, DELTA_T)
+real_estate = ast.Asset(0.05, 0.10, 5E07, DELTA_T)
+miscellaneous = ast.Asset(0.045, 0.08, 2E07, DELTA_T)
 pf = [stocks, bonds, real_estate, miscellaneous]
 corr_matrix = [
-    [1.0, 0.4, -0.2, 0.1],
-    [0.4, 1.0, 0.3, 0.7],
-    [-0.2, 0.3, 1.0, -0.1],
-    [0.1, 0.7, -0.1, 1.0]
+    [1.0, 0.1, 0.4, 0.3],
+    [0.1, 1.0, 0.2, 0.15],
+    [0.4, 0.2, 1.0, 0.35],
+    [0.3, 0.15, 0.35, 1.0]
 ]
 
 # define target allocation and corridor needed for rebalancing
-target_allocation = [7/20, 3/20, 5/20, 5/20] # tells rebalancing function how to rebalance the portfolio
+target_allocation = [10/20, 3/20, 5/20, 2/20] # tells rebalancing function how to rebalance the portfolio
 min_weights = [w_t - 0.05 for w_t in target_allocation] # min weights are 5 % below target weights
 max_weights = [w_t + 0.05 for w_t in target_allocation] # max weights are 5 % above target weights
 
@@ -34,7 +34,7 @@ liability_vals_total = []
 # simulate specified number of asset and liability paths
 for n in range(SIM_RUNS):
     # print milestones for improved runtime supervision
-    if (n+1) % 100 == 0:
+    if (n+1) % (SIM_RUNS/10) == 0:
         print(f"Completed {n+1}/{SIM_RUNS} sim runs ----- {round((n+1)/SIM_RUNS*100)} % done")
     
     asset_path_n = ast.simulate_assets(delta_t=DELTA_T, observed_time=OBSERVED_TIME, portfolio=pf, yearly_contributions=2E06, contributions_period=1, correlation_matrix=corr_matrix, transaction_costs=TRANSACTION_COSTS, rebalancing_activated=True, rebalancing_style=["calendar", "corridor"], rebalancing_period=1/4, target_allocation=target_allocation, min_weights=min_weights, max_weights=max_weights)
