@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import liabilities as lia
 import assets as ast
+import portfolio_data as pf_data
 
 SIM_RUNS = 1_000
 DELTA_T = 1/200
@@ -9,21 +10,22 @@ OBSERVED_TIME = 5
 TIME_STEPS = round(OBSERVED_TIME/DELTA_T)
 TRANSACTION_COSTS = 0.001 # percentage of trading volume
 
-# define initial assets and portfolio
-stocks = ast.Asset(0.06, 0.15, 1E08, DELTA_T)
-bonds = ast.Asset(0.03, 0.05, 3E07, DELTA_T)
-real_estate = ast.Asset(0.05, 0.10, 5E07, DELTA_T)
-miscellaneous = ast.Asset(0.045, 0.08, 2E07, DELTA_T)
-pf = [stocks, bonds, real_estate, miscellaneous]
-corr_matrix = [
-    [1.0, 0.1, 0.4, 0.3],
-    [0.1, 1.0, 0.2, 0.15],
-    [0.4, 0.2, 1.0, 0.35],
-    [0.3, 0.15, 0.35, 1.0]
-]
+# get portfolio and correlation matrix from the portfolio_data.py file
+pf, corr_matrix = pf_data.pf(DELTA_T)
+
+# print the portfolio's expected return
+def expected_portfolio_return(portfolio):
+    values = np.array([asset.value for asset in portfolio])
+    mus = np.array([asset.mu for asset in portfolio])
+    weights = values / values.sum()
+    return float(np.sum(weights * mus))
+print(f"E(mu_p) = {expected_portfolio_return(pf)}\n")
 
 # define target allocation and corridor needed for rebalancing
-target_allocation = [10/20, 3/20, 5/20, 2/20] # tells rebalancing function how to rebalance the portfolio
+# set initial allocation as target allocation
+initial_pf_sum = sum([asset.initial_value for asset in pf])
+target_allocation = [asset.initial_value/initial_pf_sum for asset in pf]
+
 min_weights = [w_t - 0.05 for w_t in target_allocation] # min weights are 5 % below target weights
 max_weights = [w_t + 0.05 for w_t in target_allocation] # max weights are 5 % above target weights
 

@@ -10,6 +10,7 @@ The project is structured as follows:
     ├── assets.py
     ├── liabilities.py
     ├── main.py
+    ├── portfolio_data.py
     └── rebalancing.py
 </pre>
 
@@ -21,6 +22,10 @@ Includes the definition of the Asset class and the function used to simulate one
 Includes the function used to simulate one single liability time series; is called in main.py
 ### src/rebalancing.py
 Includes all functions used to rebalance the asset portfolio; is called in assets.py
+### src/portfolio_data.py
+Here the following portfolio data is stored:
+- The asset classes that make up the portfolio including their expected return $\mu$, volatility $\sigma$ and the initial value invested in each asset
+- The correlation matrix
 ### src/main.py
 This is where the simulation is put together: For a given number of sim runs, portfolio value paths and liability time series are simulated and combined to calculate the asset/liability ratio (in German: Deckungsgrad). Here you can also create figures/diagrams using matplotlib if wanted.
 
